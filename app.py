@@ -44,30 +44,3 @@ if __name__ == "__main__":
     app = create_app()
     logger.info('api initialized.')
     app.run(host="0.0.0.0", port=8000, workers=os.cpu_count(), access_log=False)
-
-# import tornado.ioloop
-# import tornado.web
-# import tornado.httpserver
-# from tornado.options import options
-#
-#
-# class MainHandler(tornado.web.RequestHandler):
-#     def get(self):
-#         self.write("Hello, world")
-#
-#
-# def create_app():
-#     urls = [
-#         (r"/", MainHandler),
-#     ]
-#     return tornado.web.Application(urls, debug=True)
-#
-#
-# if __name__ == "__main__":
-#     tornado.options.parse_command_line()
-#     application = create_app()
-#     application.listen(8000)
-#     # server = tornado.httpserver.HTTPServer(application)
-#     # server.bind(8000)
-#     # server.start(0)
-#     tornado.ioloop.IOLoop.instance().start()
