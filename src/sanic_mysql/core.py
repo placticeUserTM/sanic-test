@@ -24,25 +24,34 @@ class SanicMysql:
         _mysql = await create_pool(**_k)
         log.info('opening mysql connection for [pid:{}]'.format(os.getpid()))
 
-        async def _query(sqlstr, args=None):
+        async def _query(sql_str, args=None):
             async with _mysql.acquire() as conn:
                 async with conn.cursor() as cur:
-                    final_str = cur.mogrify(sqlstr, args)
+                    final_str = cur.mogrify(sql_str, args)
                     log.info('mysql query [{}]'.format(final_str))
                     await cur.execute(final_str)
                     value = await cur.fetchall()
                     return value
 
-        async def _execute(sqlstr, args=None):
+        async def _execute(sql_str, args=None):
             async with _mysql.acquire() as conn:
                 async with conn.cursor() as cur:
-                    final_str = cur.mogrify(sqlstr, args)
+                    final_str = cur.mogrify(sql_str, args)
                     log.info('mysql query [{}]'.format(final_str))
                     await cur.execute(final_str)
                     await conn.commit()
 
+        async def _execute_many(sql_str, args: list):
+            async with _mysql.acquire() as conn:
+                async with conn.cursor() as cur:
+                    final_str = cur.mogrify(sql_str, args)
+                    log.info('mysql query [{}]'.format(final_str))
+                    await cur.executemany(final_str, args)
+                    await conn.commit()
+
         setattr(_mysql, 'query', _query)
         setattr(_mysql, 'execute', _execute)
+        setattr(_mysql, 'execute_many', _execute_many)
 
         _app.mysql = _mysql
 

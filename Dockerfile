@@ -4,7 +4,7 @@ RUN mkdir -p /app
 WORKDIR /app
 
 RUN apt update && \
-    apt install -y python3-dev default-mysql-client && \
+    apt install -y python3-dev default-mysql-client netcat && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

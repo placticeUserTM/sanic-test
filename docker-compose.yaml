@@ -1,0 +1,95 @@
+version: '3'
+
+services:
+  app:
+    container_name: app
+    build: ./
+    volumes:
+      - ./tmp/uploads/:/tmp/uploads/
+    expose:
+      - "8000"
+    environment:
+      MYSQL_DATABASE: sample
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_PORT: 3306
+      MYSQL_HOST: mysql_server
+      CASSANDRA_KEY_SPACE: cassandra_sample
+      CASSANDRA_PORT: 9042
+      CASSANDRA_DC: se1
+      CLUSTER_HOST: cassandra_server
+    depends_on:
+      - mysql_server
+      - cassandra_server
+    command: sh ./wait.sh mysql_server cassandra_server python3 app.py
+    networks:
+      - app-net
+
+  proxy_server:
+    container_name: proxy_server
+    build:
+      context: ./nginx/
+      dockerfile: ./Dockerfile
+    restart: always
+    expose:
+      - "80"
+    ports:
+      - "88:80"
+    depends_on:
+      - app
+    networks:
+      - app-net
+
+  mysql_server:
+    image: mysql
+    container_name: mysql_server
+    restart: always
+    expose:
+      - "3306"
+    volumes:
+      - ./db/mysql_init:/docker-entrypoint-initdb.d
+      - ./db/mysql_data:/var/lib/mysql
+      - ./db/mysql_conf/:/etc/mysql/conf.d
+    environment:
+      MYSQL_DATABASE: sample
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_PORT: 3306
+    networks:
+      - app-net
+
+  cassandra_server:
+      image: cassandra:latest
+      container_name: cassandra_server
+      restart: always
+      expose:
+        - "9042"
+      volumes:
+        - ./db/cassandra_data:/var/lib/cassandra
+      environment:
+        CASSANDRA_CLUSTER_NAME: Test Cluster
+        CASSANDRA_DC: se1
+        CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+        CASSANDRA_USER: user
+        CASSANDRA_PASSWORD: pass
+        MAX_HEAP_SIZE: 256M
+        HEAP_NEWSIZE: 128M
+      networks:
+        - app-net
+
+#  cassandra-load-keyspace:
+#      container_name: cassandra-load-keyspace
+#      image: cassandra:latest
+#      depends_on:
+#        - cassandra_server
+#      volumes:
+#        - ./db/cassandra_init/schema.cql:/schema.cql
+#      command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra_server -f /schema.cql"
+#      networks:
+#        - app-net
+
+networks:
+  app-net:
+    name: app-net
+    driver: bridge

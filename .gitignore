@@ -3,3 +3,4 @@ __pycache__
 .DS_Store
 tmp/
 db/mysql_data/
+db/cassandra_data/
